@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>あのね AI - 文法理解・発話トレーニング v3</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Klee+One:wght@400;600&display=swap');
+:root{
+  --cream:#FFF8EC;--paper:#FFFDF5;--orange:#F4A259;--pink:#F28B82;
+  --green:#81C784;--blue:#81D4FA;--purple:#CE93D8;--brown:#8D6E63;
+  --red:#E53935;--dg:#2E7D32;--line:#E8DCC8;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Klee One','Zen Maru Gothic',serif;background:var(--cream);background-image:repeating-linear-gradient(0deg,transparent,transparent 31px,var(--line) 31px,var(--line) 32px);color:#3E2C1C;min-height:100vh;overflow-x:hidden;}
+
+/* HEADER */
+.hdr{background:var(--paper);border-bottom:3px dashed var(--orange);padding:10px 16px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;}
+.logo{font-size:18px;font-weight:600;color:var(--brown);display:flex;align-items:center;gap:6px;}
+.hstats{display:flex;gap:8px;font-size:12px;font-weight:600;}
+.pill{background:#FFF3E0;border:2px dashed var(--orange);border-radius:20px;padding:3px 10px;color:var(--brown);}
+.pbar-w{background:#F0E6D3;height:10px;border-bottom:2px solid var(--line);}
+.pbar-f{height:100%;background:repeating-linear-gradient(45deg,var(--orange),var(--orange) 6px,#F7BC7D 6px,#F7BC7D 12px);border-radius:0 5px 5px 0;transition:width .5s ease;}
+
+/* MAIN CONTAINER */
+.main{padding:16px;max-width:560px;margin:0 auto;animation:fu .3s ease;}
+@keyframes fu{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+
+/* SECTION BANNER */
+.sec-banner{display:inline-flex;align-items:center;gap:6px;background:var(--orange);color:#fff;font-size:13px;font-weight:600;padding:4px 14px;border-radius:20px;margin-bottom:12px;transform:rotate(-1deg);}
+.sec-banner.s2{background:#E8913A;}.sec-banner.s3{background:#D98030;}.sec-banner.s4{background:#C07020;}
+
+/* CARD */
+.card{background:var(--paper);border:2.5px solid #D7C9A8;border-radius:8px;padding:20px;margin-bottom:16px;box-shadow:3px 3px 0 #E8DCC8;transform:rotate(-.3deg);}
+
+/* AVATAR ROW */
+.av{display:flex;gap:10px;align-items:flex-start;margin-bottom:14px;}
+.bbl{background:#FFF9EC;border:2px solid #D7C9A8;border-radius:14px;border-top-left-radius:2px;padding:14px 16px;font-size:16px;line-height:1.8;flex:1;position:relative;}
+.bbl::before{content:'';position:absolute;left:-9px;top:10px;border:6px solid transparent;border-right-color:#D7C9A8;}
+.bbl .tag{font-size:11px;color:var(--orange);font-weight:600;margin-bottom:4px;display:block;}
+
+/* IMAGE FRAME */
+.img-frame{background:#fff;border:3px dashed #D7C9A8;border-radius:12px;padding:8px;margin:14px auto;text-align:center;max-width:280px;transform:rotate(.4deg);}
+.img-frame img{width:100%;height:auto;border-radius:6px;display:block;}
+.img-frame .img-fallback{width:100%;height:160px;background:#F5F0E5;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:48px;color:#D7C9A8;}
+
+/* WORD LABEL */
+.word-label{text-align:center;margin:10px 0;font-size:28px;font-weight:600;color:var(--brown);padding:10px;background:#FFFDE7;border:2px dashed #F9E68C;border-radius:10px;transform:rotate(-.3deg);}
+
+/* REPLAY BUTTON */
+.replay-btn{display:inline-flex;align-items:center;gap:4px;background:#FFF3E0;border:2px dashed var(--orange);border-radius:24px;padding:6px 16px;font-size:14px;font-weight:600;color:var(--brown);cursor:pointer;font-family:inherit;margin:8px auto;transition:.15s;}
+.replay-btn:hover{background:#FFE8CC;transform:scale(1.05);}
+
+/* MIC */
+.mic-area{text-align:center;margin:20px 0;}
+.mic-btn{width:100px;height:100px;border-radius:50%;border:5px dashed var(--pink);background:#FFF0EE;cursor:pointer;font-size:40px;transition:.2s;}
+.mic-btn:hover{transform:scale(1.08);background:#FFE0DC;}
+.mic-btn.on{border-style:solid;background:#FFCDD2;animation:mp .9s infinite;}
+@keyframes mp{0%,100%{box-shadow:0 0 0 0 rgba(242,139,130,.5)}50%{box-shadow:0 0 0 16px rgba(242,139,130,0)}}
+.mic-hint{margin-top:10px;font-size:14px;color:#A09080;}
+.wd{display:none;justify-content:center;gap:5px;margin:10px 0;}
+.wd.show{display:flex;}
+.wd span{width:6px;height:6px;background:var(--pink);border-radius:50%;animation:db .6s infinite alternate;}
+.wd span:nth-child(2){animation-delay:.15s;}.wd span:nth-child(3){animation-delay:.3s;}.wd span:nth-child(4){animation-delay:.1s;}.wd span:nth-child(5){animation-delay:.25s;}
+@keyframes db{to{transform:translateY(-10px)}}
+
+/* EVAL MARK */
+.eval-mark{font-size:56px;text-align:center;margin:12px 0;animation:popM .35s ease;}
+@keyframes popM{from{transform:scale(.3);opacity:0}to{transform:scale(1);opacity:1}}
+
+/* NEXT BUTTON — very large and prominent */
+.next-wrap{text-align:center;margin:20px 0 10px;}
+.next-btn{display:inline-flex;align-items:center;gap:10px;padding:18px 48px;border-radius:40px;border:4px solid var(--dg);background:linear-gradient(135deg,#81C784,#66BB6A);color:#fff;font-size:22px;font-weight:600;cursor:pointer;font-family:inherit;box-shadow:0 4px 16px rgba(129,199,132,.4);transition:.2s;letter-spacing:2px;}
+.next-btn:hover{transform:translateY(-2px) scale(1.03);box-shadow:0 6px 20px rgba(129,199,132,.5);}
+.next-btn:active{transform:translateY(0);}
+.next-btn .arrow{font-size:28px;}
+
+/* HOME */
+.home-t{text-align:center;margin:20px 0 8px;}
+.home-t h1{font-size:28px;color:var(--brown);}
+.home-t .sub{font-size:13px;color:#A09080;}
+.les-btn{display:flex;align-items:center;gap:12px;width:100%;background:var(--paper);border:2.5px solid #D7C9A8;border-radius:8px;padding:14px 16px;margin-bottom:10px;cursor:pointer;font-family:inherit;text-align:left;transition:.2s;box-shadow:2px 2px 0 #E8DCC8;transform:rotate(-.2deg);}
+.les-btn:hover{border-color:var(--orange);box-shadow:3px 3px 0 #F4D6A8;}
+.les-btn.lk{opacity:.5;cursor:default;}
+.les-btn .li{width:44px;height:44px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;}
+.les-btn .lt{font-size:15px;font-weight:600;color:var(--brown);}
+.les-btn .ls{font-size:12px;color:#A09080;}
+.les-btn .la{margin-left:auto;font-size:18px;color:#C0B090;}
+.deco{text-align:center;font-size:12px;color:#D7C9A8;margin:6px 0;letter-spacing:4px;}
+
+/* RESULT */
+.res-box{background:var(--paper);border:3px solid #D7C9A8;border-radius:10px;padding:28px;text-align:center;box-shadow:4px 4px 0 #E8DCC8;margin:12px 0;}
+.res-stars{font-size:40px;letter-spacing:6px;margin:8px 0;}
+.res-stars .on{color:#FFC107;}.res-stars .off{color:#E0D5BF;}
+.res-score{font-size:50px;font-weight:600;color:var(--orange);}
+.res-score .u{font-size:20px;}
+.fbr{display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px dashed var(--line);text-align:left;font-size:14px;}
+.fbr:last-child{border:none;}
+.fbb{font-size:11px;font-weight:600;padding:2px 8px;border-radius:10px;white-space:nowrap;}
+.fbb.g{background:#E8F5E9;color:var(--dg);}.fbb.t{background:#FFF3E0;color:#E65100;}
+.pts-box{background:#FFF9EC;border:2px dashed var(--orange);border-radius:10px;padding:16px;text-align:center;margin:12px 0;}
+
+/* HIDDEN */
+.hidden{display:none!important;}
+
+@media(max-width:480px){.next-btn{padding:16px 36px;font-size:20px;}.word-label{font-size:24px;}.card{padding:16px;}}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header class="hdr">
+  <div class="logo">
+    <svg width="24" height="24" viewBox="0 0 40 40"><rect x="8" y="6" width="24" height="20" rx="4" fill="none" stroke="#8D6E63" stroke-width="2.5" stroke-dasharray="2,1"/><circle cx="16" cy="16" r="2.5" fill="#8D6E63"/><circle cx="24" cy="16" r="2.5" fill="#8D6E63"/><path d="M15 22 Q20 26 25 22" fill="none" stroke="#8D6E63" stroke-width="2" stroke-linecap="round"/></svg>
+    あのね AI
+  </div>
+  <div class="hstats">
+    <div class="pill">⭐ <span id="pts">120</span></div>
+    <div class="pill">🔥 3</div>
+  </div>
+</header>
+<div class="pbar-w"><div class="pbar-f" id="pb" style="width:0%"></div></div>
+
+<!-- CONTENT AREA — dynamically rendered -->
+<div class="main" id="content"></div>
+
+<!-- Robot teacher SVG template (hidden, cloned by JS) -->
+<template id="tpl-robot">
+  <svg width="52" height="52" viewBox="0 0 52 52"><rect x="8" y="6" width="36" height="28" rx="6" fill="none" stroke="#8D6E63" stroke-width="2.5" stroke-dasharray="2.5,1"/><circle cx="19" cy="20" r="3" fill="#8D6E63"/><circle cx="33" cy="20" r="3" fill="#8D6E63"/><path d="M18 28 Q26 34 34 28" fill="none" stroke="#8D6E63" stroke-width="2" stroke-linecap="round"/><line x1="18" y1="6" x2="15" y2="1" stroke="#F4A259" stroke-width="2" stroke-linecap="round"/><line x1="34" y1="6" x2="37" y2="1" stroke="#F4A259" stroke-width="2" stroke-linecap="round"/><rect x="16" y="36" width="20" height="8" rx="2" fill="none" stroke="#8D6E63" stroke-width="2" stroke-dasharray="2,1"/><line x1="21" y1="44" x2="18" y2="50" stroke="#8D6E63" stroke-width="2" stroke-linecap="round"/><line x1="31" y1="44" x2="34" y2="50" stroke="#8D6E63" stroke-width="2" stroke-linecap="round"/></svg>
+</template>
+
+<script>
+// ===== STEP DATA =====
+const STEPS = [
+  // 0: HOME
+  {type:'home'},
+
+  // --- どうにゅう１ ---
+  {type:'msg', section:'どうにゅう１', text:'きょうは「たべます」と「のみます」を べんきょうしましょう！\nえを みてね 🍽️', audio:'./data/dounyuu1_intro.mp3'},
+  {type:'vocab', section:'どうにゅう１', word:'たべます', img:'./data/img_tabemasu.png', audio:'./data/dounyuu1_tabemasu.mp3'},
+  {type:'vocab', section:'どうにゅう１', word:'のみます', img:'./data/img_nomimasu.png', audio:'./data/dounyuu1_nomimasu.mp3'},
+
+  // --- いうれんしゅう１ ---
+  {type:'msg', section:'いうれんしゅう１', text:'えを みて、いって ください！\nマイクを おして こえを だしましょう 🎤', audio:'./data/iuren1_intro.mp3'},
+  {type:'practice', section:'いうれんしゅう１', prompt:'たべます', img:'./data/img_tabemasu.png', audio:'./data/iuren1_tabemasu.mp3', ok:true},
+  {type:'practice', section:'いうれんしゅう１', prompt:'のみます', img:'./data/img_nomimasu.png', audio:'./data/iuren1_nomimasu.mp3', ok:true},
+
+  // --- どうにゅう２ ---
+  {type:'msg', section:'どうにゅう２', text:'つぎは ぶんしょうで いう れんしゅうです！\n「○○を △△ます。」の かたちで いいましょう 📖', audio:'./data/dounyuu2_intro.mp3'},
+  {type:'sentence', section:'どうにゅう２', sentence:'ごはんを たべます。', img:'./data/img_gohan.png', audio:'./data/dounyuu2_gohan_tabemasu.mp3'},
+  {type:'sentence', section:'どうにゅう２', sentence:'ぎゅうにゅうを のみます。', img:'./data/img_gyuunyuu.png', audio:'./data/dounyuu2_gyuunyuu_nomimasu.mp3'},
+  {type:'sentence', section:'どうにゅう２', sentence:'パンを たべます。', img:'./data/img_pan.png', audio:'./data/dounyuu2_pan_tabemasu.mp3'},
+  {type:'sentence', section:'どうにゅう２', sentence:'おちゃを のみます。', img:'./data/img_ocha.png', audio:'./data/dounyuu2_ocha_nomimasu.mp3'},
+
+  // --- いうれんしゅう２ ---
+  {type:'msg', section:'いうれんしゅう２', text:'こんどは ぶんしょうで いってみましょう！\nえを みて、「○○を △△ます。」で こたえてね 🎤', audio:'./data/iuren2_intro.mp3'},
+  {type:'practice', section:'いうれんしゅう２', prompt:'ごはんを たべます', img:'./data/img_gohan.png', audio:'./data/iuren2_gohan_tabemasu.mp3', ok:true},
+  {type:'practice', section:'いうれんしゅう２', prompt:'ぎゅうにゅうを のみます', img:'./data/img_gyuunyuu.png', audio:'./data/iuren2_gyuunyuu_nomimasu.mp3', ok:true},
+  {type:'practice', section:'いうれんしゅう２', prompt:'パンを たべます', img:'./data/img_pan.png', audio:'./data/iuren2_pan_tabemasu.mp3', ok:false},
+
+  // --- けっか ---
+  {type:'result'}
+];
+
+let cur = 0;
+let audio = null;
+
+// ===== ROBOT SVG =====
+function robotHTML(){
+  return document.getElementById('tpl-robot').innerHTML;
+}
+
+// ===== AUDIO =====
+function playAudio(src){
+  if(audio){audio.pause();audio=null;}
+  if(!src) return;
+  audio = new Audio(src);
+  audio.onerror = function(){/* file not found — silent */};
+  audio.play().catch(()=>{});
+}
+
+// ===== RENDER =====
+function render(){
+  const s = STEPS[cur];
+  const el = document.getElementById('content');
+  const pct = Math.round((cur / (STEPS.length-1)) * 100);
+  document.getElementById('pb').style.width = pct + '%';
+
+  let h = '';
+
+  if(s.type === 'home'){
+    h = renderHome();
+  } else if(s.type === 'msg'){
+    h = renderMsg(s);
+  } else if(s.type === 'vocab'){
+    h = renderVocab(s);
+  } else if(s.type === 'sentence'){
+    h = renderSentence(s);
+  } else if(s.type === 'practice'){
+    h = renderPractice(s);
+  } else if(s.type === 'result'){
+    h = renderResult();
+  }
+
+  el.innerHTML = h;
+  el.style.animation = 'none';
+  el.offsetHeight; // reflow
+  el.style.animation = 'fu .3s ease';
+
+  // autoplay audio
+  if(s.audio) playAudio(s.audio);
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+// ===== HOME =====
+function renderHome(){
+  return `
+    <div class="home-t">
+      <svg width="70" height="62" viewBox="0 0 80 70" style="display:block;margin:0 auto 6px;">
+        <rect x="16" y="10" width="48" height="36" rx="8" fill="none" stroke="#8D6E63" stroke-width="3" stroke-dasharray="3,1.5"/>
+        <circle cx="30" cy="28" r="4" fill="#8D6E63"/><circle cx="50" cy="28" r="4" fill="#8D6E63"/>
+        <path d="M28 38 Q40 46 52 38" fill="none" stroke="#8D6E63" stroke-width="2.5" stroke-linecap="round"/>
+        <line x1="28" y1="10" x2="24" y2="3" stroke="#F4A259" stroke-width="2.5" stroke-linecap="round"/>
+        <line x1="52" y1="10" x2="56" y2="3" stroke="#F4A259" stroke-width="2.5" stroke-linecap="round"/>
+        <circle cx="24" cy="2" r="2" fill="#F4A259"/><circle cx="56" cy="2" r="2" fill="#F4A259"/>
+        <rect x="24" y="48" width="32" height="10" rx="3" fill="none" stroke="#8D6E63" stroke-width="2.5" stroke-dasharray="3,1.5"/>
+      </svg>
+      <h1>あのね AI</h1>
+      <div class="sub">ぶんぽう りかい・はつわ トレーニング</div>
+    </div>
+    <div class="deco">✿ ✿ ✿ ✿ ✿</div>
+    <button class="les-btn" onclick="cur=1;render();" style="transform:rotate(-.2deg);">
+      <div class="li" style="background:#FFF3E0;">🍽️</div>
+      <div><div class="lt">レッスン 3：たべます・のみます</div><div class="ls">ばめん：きゅうしょくの じかん</div></div>
+      <div class="la">▶</div>
+    </button>
+    <button class="les-btn lk" disabled style="transform:rotate(.3deg);"><div class="li" style="background:#F3E5F5;">📚</div><div><div class="lt">レッスン 4：よみます・かきます</div><div class="ls">ばめん：こくごの じかん</div></div><div class="la">🔒</div></button>
+    <button class="les-btn lk" disabled style="transform:rotate(-.15deg);"><div class="li" style="background:#E1F5FE;">🏃</div><div><div class="lt">レッスン 5：はしります・あるきます</div><div class="ls">ばめん：たいいくの じかん</div></div><div class="la">🔒</div></button>
+  `;
+}
+
+// ===== MSG (AI teacher message) =====
+function renderMsg(s){
+  const lines = s.text.replace(/\n/g, '<br>');
+  return `
+    ${sectionBanner(s.section)}
+    <div class="card">
+      <div class="av">
+        ${robotHTML()}
+        <div class="bbl">
+          <span class="tag">AI せんせい</span>
+          ${lines}
+        </div>
+      </div>
+      <div style="text-align:center;">
+        <button class="replay-btn" onclick="playAudio('${s.audio}')">🔊 もういちど きく</button>
+      </div>
+    </div>
+    ${nextButton()}
+  `;
+}
+
+// ===== VOCAB =====
+function renderVocab(s){
+  return `
+    ${sectionBanner(s.section)}
+    <div class="card" style="text-align:center;">
+      <div class="img-frame">
+        <img src="${s.img}" alt="${s.word}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
+        <div class="img-fallback" style="display:none;">🖼️</div>
+      </div>
+      <div class="word-label">${s.word}</div>
+      <button class="replay-btn" onclick="playAudio('${s.audio}')">🔊 もういちど きく</button>
+    </div>
+    ${nextButton()}
+  `;
+}
+
+// ===== SENTENCE =====
+function renderSentence(s){
+  return `
+    ${sectionBanner(s.section)}
+    <div class="card" style="text-align:center;">
+      <div class="img-frame">
+        <img src="${s.img}" alt="" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
+        <div class="img-fallback" style="display:none;">🖼️</div>
+      </div>
+      <div class="word-label">${s.sentence}</div>
+      <button class="replay-btn" onclick="playAudio('${s.audio}')">🔊 もういちど きく</button>
+    </div>
+    ${nextButton()}
+  `;
+}
+
+// ===== PRACTICE =====
+function renderPractice(s){
+  return `
+    ${sectionBanner(s.section)}
+    <div class="card" style="text-align:center;">
+      <div class="img-frame">
+        <img src="${s.img}" alt="" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
+        <div class="img-fallback" style="display:none;">🖼️</div>
+      </div>
+      <div class="word-label" id="prompt-label">${s.prompt}</div>
+
+      <div class="mic-area" id="mic-area">
+        <button class="mic-btn" id="micBtn" onclick="onMicClick()">🎙️</button>
+        <div class="mic-hint" id="micHint">⬆ タップ</div>
+        <div class="wd" id="waveDots"><span></span><span></span><span></span><span></span><span></span></div>
+      </div>
+
+      <div id="eval-result" class="hidden"></div>
+
+      <button class="replay-btn" onclick="playAudio('${s.audio}')">🔊 もういちど きく</button>
+    </div>
+    <div class="next-wrap hidden" id="next-after-mic">
+      <button class="next-btn" onclick="advance()">つぎへ <span class="arrow">▶</span></button>
+    </div>
+  `;
+}
+
+// ===== RESULT =====
+function renderResult(){
+  return `
+    <div class="res-box">
+      <div style="font-size:50px;">🎉</div>
+      <div style="font-size:22px;font-weight:600;margin:6px 0;">すばらしい！</div>
+      <div class="res-stars"><span class="on">★</span><span class="on">★</span><span class="on">★</span></div>
+      <div class="res-score">85<span class="u">てん</span></div>
+      <div style="margin-top:16px;text-align:left;">
+        <div style="font-weight:600;margin-bottom:6px;">📊 はつわ フィードバック</div>
+        <div class="fbr"><span>🍚</span><span style="flex:1;">「ごはんを たべます」</span><span class="fbb g">◎ かんぺき</span></div>
+        <div class="fbr"><span>🥛</span><span style="flex:1;">「ぎゅうにゅうを のみます」</span><span class="fbb g">○ よくできた</span></div>
+        <div class="fbr"><span>🍞</span><span style="flex:1;">「パンを たべます」</span><span class="fbb t">△ もういちど</span></div>
+      </div>
+    </div>
+    <div class="pts-box">
+      <div style="font-size:15px;font-weight:600;">🏅 ポイント ゲット！</div>
+      <div style="font-size:30px;font-weight:600;color:var(--orange);">+30 ポイント</div>
+      <div style="font-size:12px;color:#A09080;">ごうけい: <strong>150 ポイント</strong></div>
+    </div>
+    <div class="next-wrap">
+      <button class="next-btn" onclick="cur=0;render();">🏠 ホーム <span class="arrow">▶</span></button>
+    </div>
+  `;
+}
+
+// ===== HELPERS =====
+function sectionBanner(name){
+  if(!name) return '';
+  const cls = name.includes('２') ? 'sec-banner s2' : name.includes('れんしゅう１') ? 'sec-banner s3' : name.includes('れんしゅう２') ? 'sec-banner s4' : 'sec-banner';
+  return `<div class="${cls}">${name}</div>`;
+}
+
+function nextButton(){
+  return `<div class="next-wrap"><button class="next-btn" onclick="advance()">つぎへ <span class="arrow">▶</span></button></div>`;
+}
+
+function advance(){
+  cur++;
+  if(cur >= STEPS.length) cur = STEPS.length - 1;
+  render();
+}
+
+// ===== MIC SIMULATION =====
+function onMicClick(){
+  const btn = document.getElementById('micBtn');
+  const hint = document.getElementById('micHint');
+  const dots = document.getElementById('waveDots');
+  if(btn.classList.contains('on')) return;
+
+  btn.classList.add('on');
+  hint.textContent = 'きいています… 🎧';
+  dots.classList.add('show');
+
+  setTimeout(()=>{
+    btn.classList.remove('on');
+    dots.classList.remove('show');
+
+    const s = STEPS[cur];
+    const isOk = s.ok !== false;
+    const evalEl = document.getElementById('eval-result');
+    evalEl.classList.remove('hidden');
+
+    if(isOk){
+      evalEl.innerHTML = '<div class="eval-mark" style="color:var(--dg);">⭕</div>';
+    } else {
+      evalEl.innerHTML = '<div class="eval-mark" style="color:var(--red);">❌</div>';
+    }
+
+    // Hide mic, show next button
+    document.getElementById('mic-area').classList.add('hidden');
+    document.getElementById('next-after-mic').classList.remove('hidden');
+  }, 2000);
+}
+
+// ===== INIT =====
+render();
+</script>
+</body>
+</html>
